@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="8191" systemVersion="15A282b" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
+    <dependencies>
+        <deployment identifier="macosx"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="8191"/>
+    </dependencies>
+    <objects>
+        <customObject id="-2" userLabel="File's Owner" customClass="TodayViewController" customModule="Safari" customModuleProvider="target">
+            <connections>
+                <outlet property="address" destination="91b-bU-Qgx" id="Eo8-Rc-Wx1"/>
+                <outlet property="progress" destination="0G9-rp-dev" id="byh-Oj-iJq"/>
+                <outlet property="refresh" destination="kMU-tq-ocN" id="fgf-Ho-MeH"/>
+                <outlet property="toolbar" destination="Jv0-Yt-Y2c" id="d85-Ff-7qM"/>
+                <outlet property="view" destination="Hz6-mo-xeY" id="0bl-1N-x8E"/>
+            </connections>
+        </customObject>
+        <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
+        <customObject id="-3" userLabel="Application" customClass="NSObject"/>
+        <customView simulatedAppContext="notificationCenter" translatesAutoresizingMaskIntoConstraints="NO" id="Hz6-mo-xeY">
+            <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
+            <animations/>
+            <point key="canvasLocation" x="202" y="269"/>
+        </customView>
+        <visualEffectView wantsLayer="YES" appearanceType="vibrantDark" blendingMode="withinWindow" state="active" id="Jv0-Yt-Y2c">
+            <rect key="frame" x="0.0" y="0.0" width="320" height="32"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+            <subviews>
+                <segmentedControl wantsLayer="YES" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="sUh-Lz-TW5">
+                    <rect key="frame" x="4" y="3" width="48" height="24"/>
+                    <animations/>
+                    <segmentedCell key="cell" borderStyle="border" alignment="left" style="separated" trackingMode="momentary" id="3RJ-co-yVX">
+                        <font key="font" metaFont="system"/>
+                        <segments>
+                            <segment image="NSGoLeftTemplate" width="21">
+                                <nil key="label"/>
+                            </segment>
+                            <segment image="NSGoRightTemplate" width="20" tag="1">
+                                <nil key="label"/>
+                            </segment>
+                        </segments>
+                    </segmentedCell>
+                    <connections>
+                        <action selector="navigatePage:" target="-2" id="kDF-h5-JXe"/>
+                    </connections>
+                </segmentedControl>
+                <textField wantsLayer="YES" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="91b-bU-Qgx">
+                    <rect key="frame" x="59" y="6" width="224" height="22"/>
+                    <animations/>
+                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" state="on" borderStyle="bezel" alignment="center" placeholderString="http://www.apple.com/" drawsBackground="YES" id="Z7U-dO-h1m">
+                        <font key="font" metaFont="system"/>
+                        <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                    </textFieldCell>
+                    <connections>
+                        <action selector="goURL:" target="-2" id="S72-l4-ZvX"/>
+                    </connections>
+                </textField>
+                <button wantsLayer="YES" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="kMU-tq-ocN">
+                    <rect key="frame" x="285" y="-1" width="36" height="32"/>
+                    <animations/>
+                    <buttonCell key="cell" type="push" bezelStyle="rounded" image="NSRefreshTemplate" imagePosition="overlaps" alignment="center" alternateImage="NSStopProgressTemplate" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="TEa-cc-EGT">
+                        <behavior key="behavior" pushIn="YES" changeContents="YES" lightByContents="YES"/>
+                        <font key="font" metaFont="system"/>
+                    </buttonCell>
+                    <connections>
+                        <action selector="refreshOrStop:" target="-2" id="6ui-ro-yX9"/>
+                    </connections>
+                </button>
+                <progressIndicator wantsLayer="YES" horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" maxValue="100" bezeled="NO" controlSize="small" style="spinning" translatesAutoresizingMaskIntoConstraints="NO" id="0G9-rp-dev">
+                    <rect key="frame" x="264" y="9" width="16" height="16"/>
+                    <animations/>
+                </progressIndicator>
+            </subviews>
+            <animations/>
+            <point key="canvasLocation" x="202" y="-95"/>
+        </visualEffectView>
+    </objects>
+    <resources>
+        <image name="NSGoLeftTemplate" width="9" height="12"/>
+        <image name="NSGoRightTemplate" width="9" height="12"/>
+        <image name="NSRefreshTemplate" width="11" height="15"/>
+        <image name="NSStopProgressTemplate" width="11" height="11"/>
+    </resources>
+</document>
