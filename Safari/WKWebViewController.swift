@@ -148,11 +148,24 @@ class WKWebViewController: NSViewController, WKUIDelegate, WKNavigationDelegate,
 		self.webView!.navigationDelegate = self
 		self.webView!.addObserver(self, forKeyPath: "estimatedProgress", options: .new, context: nil)
         
+        var b = self.view.bounds
+        b.origin.x = b.size.width - 22.0
+        b.size.width = 22.0
+        let scroller = NSScroller(frame: b)
+        scroller.scrollerStyle = .overlay
+        scroller.knobStyle = .light
+        scroller.knobProportion = 0.05
+        scroller.doubleValue = 0.5
+        scroller.isEnabled = true
+        scroller.target = self
+        scroller.action = #selector(self.scrollbar(_:))
+        
 		// Configure toolbar and subviews
 		var rect = self.view.bounds
 		rect.origin.y = rect.size.height - 26
 		rect.size.height = 26
 		self.view.addSubview(self.webView!)
+        self.view.addSubview(scroller)
 		self.view.addSubview(self.toolbar!)
 		self.toolbar!.frame = rect
 		
@@ -174,6 +187,36 @@ class WKWebViewController: NSViewController, WKUIDelegate, WKNavigationDelegate,
 		self.address!.stringValue = site
         self.webView!.load(URLRequest(url: URL(string:site)!))
 	}
+    
+    private func test() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(1)) {
+            if #available(OSXApplicationExtension 10.13, *) {
+                let ev = CGEvent(scrollWheelEvent2Source: nil, units: .line, wheelCount: 1, wheel1: -50, wheel2: 0, wheel3: 0)
+                self.webView!.scrollWheel(with: NSEvent(cgEvent: ev!)!)
+                print("fake scroll")
+            }
+        }
+    }
+    
+    override func viewDidAppear() {
+        
+        
+        /*
+        CGWheelCount wheelCount = 2; // 1 for Y-only, 2 for Y-X, 3 for Y-X-Z
+        int32_t xScroll = −1; // Negative for right
+        int32_t yScroll = −2; // Negative for down
+        CGEventRef cgEvent = CGEventCreateScrollWheelEvent(NULL, kCGScrollEventUnitLine, wheelCount, yScroll, xScroll);
+        
+        // You can post the CGEvent to the event stream to have it automatically sent to the window under the cursor
+        CGEventPost(kCGHIDEventTap, cgEvent);
+        
+        NSEvent *theEvent = [NSEvent eventWithCGEvent:cgEvent];
+        CFRelease(cgEvent);
+        
+        // Or you can send the NSEvent directly to a view
+        [theView scrollWheel:theEvent];
+        */
+    }
 	
 	deinit {
 		
@@ -259,6 +302,12 @@ class WKWebViewController: NSViewController, WKUIDelegate, WKNavigationDelegate,
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation) {
 		self.refresh!.state = .off
         self.progress!.animator().isHidden = true
+        
+        webView.evaluateJavaScript("document.body.scrollHeight") { (result, error) in
+            
+            print("height", result, error)
+            
+        }
 	}
 	
     func webView(_ webView: WKWebView, didFail navigation: WKNavigation, withError error: Error) {
@@ -336,6 +385,10 @@ class WKWebViewController: NSViewController, WKUIDelegate, WKNavigationDelegate,
 	}
 	
 	// ---------
+	
+    @IBAction func scrollbar(_ sender: NSScroller!) {
+        print(sender.doubleValue)
+    }
     
 	@IBAction func navigatePage(_ sender: NSSegmentedControl) {
 		if sender.integerValue == 0 { // back
