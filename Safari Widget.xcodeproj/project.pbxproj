@@ -7,14 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		48C980281C10E6F30004A26B /* NotificationCenter.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 48C980271C10E6F30004A26B /* NotificationCenter.framework */; settings = {ASSET_TAGS = (); }; };
+		48C980281C10E6F30004A26B /* NotificationCenter.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 48C980271C10E6F30004A26B /* NotificationCenter.framework */; };
 		48C980371C10E6F30004A26B /* Safari.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 48C980251C10E6F30004A26B /* Safari.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		48C9803D1C10E76E0004A26B /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 48C9803C1C10E76E0004A26B /* WebKit.framework */; };
-		48C980421C11C3220004A26B /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48C980401C11C3220004A26B /* AppDelegate.swift */; settings = {ASSET_TAGS = (); }; };
-		48C980461C11C32C0004A26B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 48C980441C11C32C0004A26B /* Assets.xcassets */; settings = {ASSET_TAGS = (); }; };
+		48C980421C11C3220004A26B /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48C980401C11C3220004A26B /* AppDelegate.swift */; };
+		48C980461C11C32C0004A26B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 48C980441C11C32C0004A26B /* Assets.xcassets */; };
 		48C980511C11C3B50004A26B /* WKWebViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48C9804A1C11C34E0004A26B /* WKWebViewController.swift */; };
-		48C9805A1C11C44C0004A26B /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 48C980581C11C44C0004A26B /* Main.storyboard */; settings = {ASSET_TAGS = (); }; };
-		48C9805D1C11C5090004A26B /* WKWebViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 48C9805B1C11C5090004A26B /* WKWebViewController.xib */; settings = {ASSET_TAGS = (); }; };
+		48C9805A1C11C44C0004A26B /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 48C980581C11C44C0004A26B /* Main.storyboard */; };
+		48C9805D1C11C5090004A26B /* WKWebViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 48C9805B1C11C5090004A26B /* WKWebViewController.xib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -386,6 +386,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.avaidyam.Safari-Widget";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 4.0;
 			};
 			name = Debug;
 		};
@@ -399,6 +400,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.avaidyam.Safari-Widget";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 4.0;
 			};
 			name = Release;
 		};
@@ -413,6 +415,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.avaidyam.Safari-Widget.Safari";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 4.0;
 			};
 			name = Debug;
 		};
@@ -427,6 +430,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.avaidyam.Safari-Widget.Safari";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 4.0;
 			};
 			name = Release;
 		};

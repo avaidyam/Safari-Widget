@@ -79,10 +79,37 @@ let FAILED_TO_OPEN_PAGE =
 "</body>" +
 "</html>";
 
+let scrollers_css = """
+::-webkit-scrollbar {
+    -webkit-appearance: none;
+}
+
+::-webkit-scrollbar:vertical {
+    width: 11px;
+}
+
+::-webkit-scrollbar:horizontal {
+    height: 11px;
+}
+
+::-webkit-scrollbar-thumb {
+    border-radius: 8px;
+    border: 2px solid white; /* should match background, can't be transparent */
+    background-color: rgba(0, 0, 0, .5);
+}
+
+::-webkit-scrollbar-track {
+    background-color: #fff;
+    border-radius: 8px;
+}
+"""
+let scrollers_script = "var style = document.createElement('style'); style.innerHTML = '::-webkit-scrollbar{-webkit-appearance:none}::-webkit-scrollbar:vertical{width:11px}::-webkit-scrollbar:horizontal{height:11px}::-webkit-scrollbar-thumb{border-radius:8px;border:2px solid #fff;background-color:rgba(0,0,0,.5)}'; document.head.appendChild(style);"
+
 // To render the above (or any) string.
-func render(var str: String, dict: Dictionary<String, String>, sep: String = "%") -> String {
-	for (key, value) in dict {
-		str = str.stringByReplacingOccurrencesOfString(sep + "\(key)" + sep, withString: value)
+func render(str: String, dict: Dictionary<String, String>, sep: String = "%") -> String {
+    var str = str
+    for (key, value) in dict {
+        str = str.replacingOccurrences(of: sep + "\(key)" + sep, with: value)
 	}
 	return str
 }
@@ -91,7 +118,7 @@ class WKWebViewController: NSViewController, WKUIDelegate, WKNavigationDelegate,
 	
 	let agent = "Mozilla/5.0 (iPhone; CPU iPhone OS 9_0 like Mac OS X) AppleWebKit/601.1.16 (KHTML, like Gecko) Version/8.0 Mobile/13A175 Safari/600.1.4"
 	let siteKey = "WEB_SITE_KEY"
-	let defaults = NSUserDefaults.standardUserDefaults()
+    let defaults = UserDefaults.standard
 	
 	@IBOutlet var webView: WKWebView?
 	@IBOutlet var refresh: NSButton?
@@ -99,24 +126,32 @@ class WKWebViewController: NSViewController, WKUIDelegate, WKNavigationDelegate,
 	@IBOutlet var toolbar: NSVisualEffectView?
 	@IBOutlet var progress: NSProgressIndicator?
 	
-	override var nibName: String? {
-		return self.className
+	override var nibName: NSNib.Name? {
+		return NSNib.Name(rawValue: self.className)
 	}
 	
 	override func loadView() {
 		super.loadView()
-		self.preferredContentSize = CGSizeMake(320, 568)
-		
+		self.preferredContentSize = CGSize(width: 320, height: 568)
+        
+        let configuration = WKWebViewConfiguration()
+        let script = WKUserScript(source: scrollers_script, injectionTime: .atDocumentStart, forMainFrameOnly: false)
+        configuration.userContentController.addUserScript(script)
+        
+        let preferences = WKPreferences()
+        preferences.javaScriptEnabled = true
+        configuration.preferences = preferences
+        
 		// Configure webView
-		self.webView = WKWebView(frame: self.view.bounds)
-		self.webView!.UIDelegate = self
+        self.webView = WKWebView(frame: self.view.bounds, configuration: configuration)
+		self.webView!.uiDelegate = self
 		self.webView!.navigationDelegate = self
-		self.webView!.addObserver(self, forKeyPath: "estimatedProgress", options: .New, context: nil)
-		
+		self.webView!.addObserver(self, forKeyPath: "estimatedProgress", options: .new, context: nil)
+        
 		// Configure toolbar and subviews
 		var rect = self.view.bounds
-		rect.origin.y = rect.size.height - 32
-		rect.size.height = 32
+		rect.origin.y = rect.size.height - 26
+		rect.size.height = 26
 		self.view.addSubview(self.webView!)
 		self.view.addSubview(self.toolbar!)
 		self.toolbar!.frame = rect
@@ -129,73 +164,73 @@ class WKWebViewController: NSViewController, WKUIDelegate, WKNavigationDelegate,
 		
 		// Load the page and display it
 		if self.extensionContext != nil {
-			self.toolbar!.hidden = true
+            self.toolbar!.isHidden = true
 		}
-		self.progress!.hidden = true
+        self.progress!.isHidden = true
 		var site = "http://www.apple.com/"
-		if defaults.stringForKey(siteKey) != nil {
-			site = defaults.stringForKey(siteKey)!
+        if defaults.string(forKey: siteKey) != nil {
+            site = defaults.string(forKey: siteKey)!
 		}
 		self.address!.stringValue = site
-		self.webView!.loadRequest(NSURLRequest(URL: NSURL(string:site)!))
+        self.webView!.load(URLRequest(url: URL(string:site)!))
 	}
 	
 	deinit {
 		
 		// Clean up after webView
 		self.webView!.removeObserver(self, forKeyPath: "estimatedProgress")
-		self.webView!.UIDelegate = nil
+		self.webView!.uiDelegate = nil
 		self.webView!.navigationDelegate = nil
 	}
 	
 	// ---------
 	
-	func webView(webView: WKWebView, decidePolicyForNavigationAction navigationAction: WKNavigationAction,
-		decisionHandler: ((WKNavigationActionPolicy) -> Void)) {
-		let _ = navigationAction.request.URL
+    func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction,
+                 decisionHandler: @escaping ((WKNavigationActionPolicy) -> Void)) {
+		let _ = navigationAction.request.url
 		switch navigationAction.navigationType {
-			case .LinkActivated:
+        case .linkActivated:
 				if navigationAction.targetFrame == nil {
-					self.webView?.loadRequest(navigationAction.request)
+                    self.webView?.load(navigationAction.request)
 				}
 			default:
 				break
 		}
-		decisionHandler(.Allow)
+        decisionHandler(.allow)
 	}
 	
-	func webView(webView: WKWebView, decidePolicyForNavigationResponse navigationResponse: WKNavigationResponse,
-		decisionHandler: ((WKNavigationResponsePolicy) -> Void)) {
-		decisionHandler(.Allow)
+    func webView(_ webView: WKWebView, decidePolicyFor navigationResponse: WKNavigationResponse,
+                 decisionHandler: @escaping ((WKNavigationResponsePolicy) -> Void)) {
+        decisionHandler(.allow)
 	}
 	
-	func webView(webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation) {
-		self.refresh!.state = 1
-		self.progress!.animator().hidden = false
+    func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation) {
+        self.refresh!.state = .on
+        self.progress!.animator().isHidden = false
 	}
 	
-	func webView(webView: WKWebView, didCommitNavigation navigation: WKNavigation) {
-		defaults.setObject((self.webView!.URL?.absoluteString)!, forKey: siteKey)
-		self.address!.stringValue = (self.webView!.URL?.absoluteString)!
+    func webView(_ webView: WKWebView, didCommit navigation: WKNavigation) {
+        defaults.set((self.webView!.url?.absoluteString)!, forKey: siteKey)
+        self.address!.stringValue = (self.webView!.url?.absoluteString)!
 	}
 	
-	func webView(webView: WKWebView, didReceiveAuthenticationChallenge challenge: NSURLAuthenticationChallenge,
-		completionHandler: (NSURLSessionAuthChallengeDisposition, NSURLCredential?) -> Void) {
+    func webView(_ webView: WKWebView, didReceive challenge: URLAuthenticationChallenge,
+                 completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
 		
 		// Only handle HTTP form authentication
 		guard challenge.protectionSpace.authenticationMethod == NSURLAuthenticationMethodHTTPBasic ||
 			challenge.protectionSpace.authenticationMethod == NSURLAuthenticationMethodHTTPDigest else {
-				completionHandler(.PerformDefaultHandling, nil)
+                completionHandler(.performDefaultHandling, nil)
 				return
 		}
 		
 		// Create an alert and pre-fill info
 		let alert = NSAlert()
-		alert.messageText = (self.webView!.URL?.host)!
+        alert.messageText = (self.webView!.url?.host)!
 		alert.informativeText = "Authentication Required"
-		alert.alertStyle = .CriticalAlertStyle
-		alert.addButtonWithTitle("Authenticate")
-		alert.addButtonWithTitle("Cancel")
+		alert.alertStyle = .critical
+        alert.addButton(withTitle: "Authenticate")
+        alert.addButton(withTitle: "Cancel")
 		
 		// Add username and password accessory fields
 		let username = NSTextField(frame: NSMakeRect(0, 28, 200, 24))
@@ -208,84 +243,84 @@ class WKWebViewController: NSViewController, WKUIDelegate, WKNavigationDelegate,
 		alert.accessoryView = view
 		
 		// Run the alert and return the input
-		if alert.runModal() == NSAlertFirstButtonReturn {
-			let credential = NSURLCredential(user: username.stringValue,
-				password: password.stringValue, persistence: .ForSession)
-			completionHandler(.UseCredential, credential)
+        if alert.runModal() == .alertFirstButtonReturn {
+            let credential = URLCredential(user: username.stringValue,
+                                           password: password.stringValue, persistence: .forSession)
+            completionHandler(.useCredential, credential)
 		} else {
-			completionHandler(.RejectProtectionSpace, nil)
+            completionHandler(.rejectProtectionSpace, nil)
 		}
 	}
 	
-	func webView(webView: WKWebView, didReceiveServerRedirectForProvisionalNavigation navigation: WKNavigation) {
+    func webView(_ webView: WKWebView, didReceiveServerRedirectForProvisionalNavigation navigation: WKNavigation) {
 		
 	}
 	
-	func webView(webView: WKWebView, didFinishNavigation navigation: WKNavigation) {
-		self.refresh!.state = 0
-		self.progress!.animator().hidden = true
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation) {
+		self.refresh!.state = .off
+        self.progress!.animator().isHidden = true
 	}
 	
-	func webView(webView: WKWebView, didFailNavigation navigation: WKNavigation, withError error: NSError) {
-		self.refresh!.state = 0
-		self.progress!.animator().hidden = true
-		loadErrorPage(error)
+    func webView(_ webView: WKWebView, didFail navigation: WKNavigation, withError error: Error) {
+		self.refresh!.state = .off
+        self.progress!.animator().isHidden = true
+        loadErrorPage(error: error)
 	}
 	
-	func webView(webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation, withError error: NSError) {
-		self.refresh!.state = 0
-		self.progress!.animator().hidden = true
-		loadErrorPage(error)
+    func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation, withError error: Error) {
+		self.refresh!.state = .off
+		self.progress!.animator().isHidden = true
+		loadErrorPage(error: error)
 	}
 	
 	// ---------
 	
-	func loadErrorPage(error: NSError) {
-		self.webView!.loadHTMLString(render(FAILED_TO_OPEN_PAGE, dict: [
-			"title": "Error \(error.code)",
+	func loadErrorPage(error: Error) {
+        self.webView!.loadHTMLString(render(str: FAILED_TO_OPEN_PAGE, dict: [
+            "title": "Error \(error._code)",
 			"message": error.localizedDescription
 			]), baseURL: nil)
 	}
 	
 	// ---------
 	
-	func webView(webView: WKWebView, runJavaScriptAlertPanelWithMessage message: String,
-		initiatedByFrame frame: WKFrameInfo, completionHandler: (() -> Void)) {
+	func webView(_ webView: WKWebView, runJavaScriptAlertPanelWithMessage message: String,
+                 initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping (() -> Void)) {
 		
 		// Create an alert and run it
 		let alert = NSAlert()
-		alert.messageText = (frame.request.URL?.host)!
+		alert.messageText = (frame.request.url?.host)!
 		alert.informativeText = message
-		alert.alertStyle = .InformationalAlertStyle
-		alert.addButtonWithTitle("OK")
-		alert.addButtonWithTitle("Cancel")
+		alert.alertStyle = .informational
+        alert.addButton(withTitle: "OK")
+        alert.addButton(withTitle: "Cancel")
 		alert.runModal()
 		completionHandler()
 	}
 	
-	func webView(webView: WKWebView, runJavaScriptConfirmPanelWithMessage message: String,
-		initiatedByFrame frame: WKFrameInfo, completionHandler: ((Bool) -> Void)) {
+	func webView(_ webView: WKWebView, runJavaScriptConfirmPanelWithMessage message: String,
+                 initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping ((Bool) -> Void)) {
 		
 		// Create an alert and run it
 		let alert = NSAlert()
-		alert.messageText = (frame.request.URL?.host)!
+		alert.messageText = (frame.request.url?.host)!
 		alert.informativeText = message
-		alert.alertStyle = .InformationalAlertStyle
-		alert.addButtonWithTitle("OK")
-		alert.addButtonWithTitle("Cancel")
-		completionHandler((alert.runModal() == NSAlertFirstButtonReturn))
+		alert.alertStyle = .informational
+        alert.addButton(withTitle: "OK")
+        alert.addButton(withTitle: "Cancel")
+        completionHandler((alert.runModal() == .alertFirstButtonReturn))
 	}
 	
-	func webView(webView: WKWebView, runJavaScriptTextInputPanelWithPrompt prompt: String,
-		defaultText: String?, initiatedByFrame frame: WKFrameInfo, completionHandler: (String?) -> Void) {
+    func webView(_ webView: WKWebView, runJavaScriptTextInputPanelWithPrompt prompt: String,
+                 defaultText: String?, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping (String?) -> Void) {
 		
 		// Create an alert and pre-fill info
 		let alert = NSAlert()
-		alert.messageText = (frame.request.URL?.host)!
+		alert.messageText = (frame.request.url?.host)!
 		alert.informativeText = prompt
-		alert.alertStyle = .InformationalAlertStyle
-		alert.addButtonWithTitle("OK")
-		alert.addButtonWithTitle("Cancel")
+		alert.alertStyle = .informational
+        alert.addButton(withTitle: "OK")
+        alert.addButton(withTitle: "Cancel")
 		
 		// Add an input accessory field
 		let input = NSTextField(frame: NSMakeRect(0, 0, 200, 24))
@@ -293,7 +328,7 @@ class WKWebViewController: NSViewController, WKUIDelegate, WKNavigationDelegate,
 		alert.accessoryView = input
 		
 		// Run the alert and return the input
-		if alert.runModal() == NSAlertFirstButtonReturn {
+        if alert.runModal() == .alertFirstButtonReturn {
 			completionHandler(input.stringValue)
 		} else {
 			completionHandler(nil)
@@ -301,8 +336,8 @@ class WKWebViewController: NSViewController, WKUIDelegate, WKNavigationDelegate,
 	}
 	
 	// ---------
-	
-	@IBAction func navigatePage(sender: NSSegmentedControl) {
+    
+	@IBAction func navigatePage(_ sender: NSSegmentedControl) {
 		if sender.integerValue == 0 { // back
 			self.webView!.goBack()
 		} else if sender.integerValue == 1 { // forward
@@ -310,43 +345,48 @@ class WKWebViewController: NSViewController, WKUIDelegate, WKNavigationDelegate,
 		}
 	}
 	
-	@IBAction func refreshOrStop(sender: NSButton) {
-		if sender.state == 0 { // loaded/refresh visible
+	@IBAction func refreshOrStop(_ sender: NSButton) {
+		if sender.state == .off { // loaded/refresh visible
 			self.webView!.stopLoading()
-		} else if sender.state == 1 { // loading/stop visible
+		} else if sender.state == .on { // loading/stop visible
 			self.webView!.reloadFromOrigin()
 		}
 	}
 	
-	@IBAction func goURL(sender: NSTextField) {
-		defaults.setObject(sender.stringValue, forKey: siteKey)
-		self.webView!.loadRequest(NSURLRequest(URL: NSURL(string:sender.stringValue)!))
+	@IBAction func goURL(_ sender: NSTextField) {
+        var str = sender.stringValue
+        if !(str.hasPrefix("http://") || str.hasPrefix("https://")) {
+            str = "http://" + str
+        }
+        
+        defaults.set(str, forKey: siteKey)
+        self.webView!.load(URLRequest(url: URL(string: str)!))
 	}
 	
-	override func observeValueForKeyPath(keyPath: String?, ofObject object: AnyObject?, change: [String : AnyObject]?, context: UnsafeMutablePointer<Void>) {
-		if keyPath! == "estimatedProgress" {
-			self.progress!.animator().doubleValue = (self.webView?.estimatedProgress)! * 100
-		} else {
-			super.observeValueForKeyPath(keyPath, ofObject: object, change: change, context: context)
-		}
-	}
+    override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
+        if keyPath! == "estimatedProgress" {
+            self.progress!.animator().doubleValue = (self.webView?.estimatedProgress)! * 100
+        } else {
+            super.observeValue(forKeyPath: keyPath, of: object, change: change, context: context)
+        }
+    }
 }
 
 // Support NCWidgetProviding for Today stuff
 extension WKWebViewController: NCWidgetProviding {
-	func widgetMarginInsetsForProposedMarginInsets(defaultMarginInset: NSEdgeInsets) -> NSEdgeInsets {
+	public func widgetMarginInsets(forProposedMarginInsets defaultMarginInset: NSEdgeInsets) -> NSEdgeInsets {
 		return NSEdgeInsetsZero
 	}
-	func widgetPerformUpdateWithCompletionHandler(completionHandler: ((NCUpdateResult) -> Void)!) {
-		completionHandler(.NewData)
+	public func widgetPerformUpdate(completionHandler: @escaping (NCUpdateResult) -> Swift.Void) {
+        completionHandler(.newData)
 	}
 	var widgetAllowsEditing: Bool {
 		return true
 	}
 	func widgetDidBeginEditing() {
-		self.toolbar!.animator().hidden = false
+        self.toolbar!.animator().isHidden = false
 	}
 	func widgetDidEndEditing() {
-		self.toolbar!.animator().hidden = true
+        self.toolbar!.animator().isHidden = true
 	}
 }
